@@ -5,7 +5,7 @@ turn progress, token usage, context-window fill, cache hit rate, an ETA until
 the window fills, and what the session has cost.
 
 ```
-⚡ 1m05s · turn 3 │ ↑186.0k ↓1.2k │ cache 97% │ ctx 45% · 90.0k/200.0k │ ≈2m20s to full │ $0.42
+⚡ 1m05s · turn 3 │ opus-4-7 │ ↑186.0k ↓1.2k │ cache 97% │ ctx 45% · 90.0k/200.0k │ ≈2m20s to full │ $0.42
 ```
 
 No panes, no popups, no polling processes — one pinned line that stays out of
@@ -16,6 +16,7 @@ the way. Segments whose figures aren't known yet are simply omitted.
 | Segment | Meaning | Source |
 | --- | --- | --- |
 | `⚡ 1m05s · turn 3` | The current turn has been running 1m05s, it's the session's 3rd turn; `✓ idle` between turns | `turn.start`, a 1s ticker |
+| `opus-4-7` | The model the next request will use (updates the moment you switch in `/config`/`/model`) | `$.config.list()`, `turn.complete` usage |
 | `↑186.0k ↓1.2k` | Cumulative session tokens: input side (uncached + cache-read + cache-written) ↑, generated ↓ | `turn.complete` usage, summed |
 | `cache 97%` | Cache hit rate: cache-read ÷ total input tokens | same |
 | `ctx 45% · 90.0k/200.0k` | Live context-window fill | `session.measure` |

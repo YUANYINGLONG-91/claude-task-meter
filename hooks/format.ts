@@ -3,6 +3,8 @@ import type { Meter, Spend, Totals } from '../types'
 export type Snapshot = {
   running: boolean
   elapsedMs: number
+  /** The model the next request will use, or the last one that answered */
+  model: string | null
   totals: Totals
   meter: Meter
   /** 待显示的费用；custom 为按用户单价估算（画 ≈），否则是引擎账本 */
@@ -72,6 +74,10 @@ export const fmtDur = (ms: number): string => {
   return `${h}h${String(m % 60).padStart(2, '0')}m`
 }
 
+/** "claude-opus-4-7" → "opus-4-7"; drops the prefix and any -YYYYMMDD date */
+export const fmtModel = (id: string): string =>
+  id.replace(/^claude-/, '').replace(/-\d{8}$/, '')
+
 /** Cumulative cache hit rate of the session; null before any input at all */
 export const cacheHitPct = (t: Totals): number | null => {
   const inAll = t.input + t.cacheRead + t.cacheWrite
@@ -112,6 +118,8 @@ export const composeLine = (s: Snapshot): string => {
       ? `⚡ ${fmtDur(s.elapsedMs)} · turn ${s.totals.turns + 1}`
       : '✓ idle',
   )
+
+  if (s.model !== null) seg.push(fmtModel(s.model))
 
   const inAll = s.totals.input + s.totals.cacheRead + s.totals.cacheWrite
   seg.push(`↑${fmtTok(inAll)} ↓${fmtTok(s.totals.output)}`)

@@ -1,6 +1,6 @@
 {
   "name": "task-meter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "One status line: turn progress, token usage, context fill, cache hit rate, ETA to full and cost",
   "author": { "name": "yuany" },
   "types": "./types/index.d.ts",

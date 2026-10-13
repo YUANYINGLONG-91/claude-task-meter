@@ -14,6 +14,7 @@ const TOTALS0: Totals = {
   turns: 0,
   turnMs: 0,
   byModel: {},
+  lastModel: null,
 }
 const METER0: Meter = {
   tokens: null,
@@ -32,6 +33,14 @@ let turnStartedAt = 0
 let tick: Timer | null = null
 let priceTable: PriceTable | null = null
 let showCost = true
+/** The session's model as /config holds it; the last turn's usage is the fallback */
+let currentModel: string | null = null
+
+const refreshModel = async ($: EngineInterface) => {
+  const rows = await $.config.list()
+  const row = rows.find(r => r.key === 'model') ?? rows.find(r => /model/i.test(r.key))
+  currentModel = typeof row?.value === 'string' ? row.value : null
+}
 
 const render = async ($: EngineInterface) => {
   const now = await $.clock.now()
@@ -55,6 +64,7 @@ const render = async ($: EngineInterface) => {
     composeLine({
       running: turnStartedAt > 0,
       elapsedMs: turnStartedAt > 0 ? now - turnStartedAt : 0,
+      model: currentModel ?? t.lastModel ?? null,
       totals: t,
       meter: m,
       cost,
@@ -67,6 +77,7 @@ export const register: Register = (on, options) => {
   showCost = options.showCost !== false
 
   on('session.start', async ($, e, next) => {
+    await refreshModel($)
     await render($)
     return next(e)
   })
@@ -77,6 +88,7 @@ export const register: Register = (on, options) => {
     tick = $.clock.every(1000, () => {
       void render($)
     })
+    await refreshModel($)
     await render($)
     return next(e)
   })
@@ -108,9 +120,20 @@ export const register: Register = (on, options) => {
       turns: t.turns + 1,
       turnMs: t.turnMs + e.durationMs,
       byModel,
+      lastModel: u?.model ?? t.lastModel ?? null,
     })
     await render($)
     return next(e)
+  })
+
+  // A model switch in /config refreshes the line at once, mid-idle too
+  on('config.set', async ($, e, next) => {
+    const result = await next(e)
+    if (/model/i.test(e.key)) {
+      await refreshModel($)
+      await render($)
+    }
+    return result
   })
 
   on('session.measure', async ($, e, next) => {

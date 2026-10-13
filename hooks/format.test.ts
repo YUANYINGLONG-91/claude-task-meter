@@ -6,6 +6,7 @@ import {
   customCost,
   etaToFull,
   fmtDur,
+  fmtModel,
   fmtTok,
   parsePricing,
 } from './format'
@@ -18,6 +19,7 @@ const T0 = {
   turns: 0,
   turnMs: 0,
   byModel: {},
+  lastModel: null,
 }
 
 test('fmtTok abbreviates by magnitude', () => {
@@ -31,6 +33,12 @@ test('fmtDur carries into minutes and hours', () => {
   expect(fmtDur(7_000)).toBe('7s')
   expect(fmtDur(65_000)).toBe('1m05s')
   expect(fmtDur(3_725_000)).toBe('1h02m')
+})
+
+test('fmtModel strips the claude- prefix and a date suffix', () => {
+  expect(fmtModel('claude-opus-4-7')).toBe('opus-4-7')
+  expect(fmtModel('claude-sonnet-4-5-20250929')).toBe('sonnet-4-5')
+  expect(fmtModel('some-relay-model')).toBe('some-relay-model')
 })
 
 test('cacheHitPct is null before any input', () => {
@@ -85,6 +93,7 @@ test('composeLine assembles every segment', () => {
   const line = composeLine({
     running: true,
     elapsedMs: 65_000,
+    model: 'claude-opus-4-7',
     totals: {
       input: 5000,
       output: 1200,
@@ -93,6 +102,7 @@ test('composeLine assembles every segment', () => {
       turns: 2,
       turnMs: 0,
       byModel: {},
+      lastModel: null,
     },
     meter: {
       tokens: 90_000,
@@ -104,6 +114,7 @@ test('composeLine assembles every segment', () => {
     cost: { usd: 0.42, custom: false },
   })
   expect(line).toContain('⚡ 1m05s · turn 3')
+  expect(line).toContain('opus-4-7')
   expect(line).toContain('↑186.0k ↓1.2k')
   expect(line).toContain('cache 97%')
   expect(line).toContain('ctx 45% · 90.0k/200.0k')
@@ -115,6 +126,7 @@ test('composeLine marks custom-priced cost with ≈', () => {
   const line = composeLine({
     running: false,
     elapsedMs: 0,
+    model: null,
     totals: T0,
     meter: { tokens: null, window: 0, percent: null, usd: null, samples: [] },
     cost: { usd: 1.5, custom: true },
@@ -126,6 +138,7 @@ test('composeLine drops unknown segments when idle', () => {
   const line = composeLine({
     running: false,
     elapsedMs: 0,
+    model: null,
     totals: T0,
     meter: { tokens: null, window: 0, percent: null, usd: null, samples: [] },
     cost: null,

@@ -10,6 +10,8 @@ export type Totals = Spend & {
   turnMs: number
   /** Per-model-id totals, so custom pricing can price each model at its own rates */
   byModel: Record<string, Spend>
+  /** The model of the last turn that reported usage */
+  lastModel: string | null
 }
 
 export type Meter = {
