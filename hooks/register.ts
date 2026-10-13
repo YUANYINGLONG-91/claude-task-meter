@@ -37,9 +37,15 @@ let showCost = true
 let currentModel: string | null = null
 
 const refreshModel = async ($: EngineInterface) => {
-  const rows = await $.config.list()
-  const row = rows.find(r => r.key === 'model') ?? rows.find(r => /model/i.test(r.key))
-  currentModel = typeof row?.value === 'string' ? row.value : null
+  // A config read that fails must never hold up the line; the last turn's
+  // model (usage.model) remains as the fallback
+  try {
+    const rows = await $.config.list()
+    const row = rows.find(r => r.key === 'model') ?? rows.find(r => /model/i.test(r.key))
+    currentModel = typeof row?.value === 'string' ? row.value : null
+  } catch {
+    currentModel = null
+  }
 }
 
 const render = async ($: EngineInterface) => {
