@@ -11,6 +11,63 @@ export type Snapshot = {
   cost: { usd: number; custom: boolean } | null
 }
 
+/** What $.store keeps per conversation id, so a resume continues the counts */
+export type Saved = { v: 1; updatedAt: number; totals: Totals; meter: Meter }
+
+export const TOTALS0: Totals = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+  turns: 0,
+  turnMs: 0,
+  byModel: {},
+  lastModel: null,
+}
+
+export const METER0: Meter = {
+  tokens: null,
+  window: 0,
+  percent: null,
+  usd: null,
+  samples: [],
+}
+
+/**
+ * Reads a stored blob back, tolerating missing or newer fields; null when it
+ * isn't one of ours. Rate samples never carry over — a new sitting fills at
+ * its own pace, so the ETA starts sampling fresh.
+ */
+export const parseSaved = (v: unknown): Saved | null => {
+  if (typeof v !== 'object' || v === null) return null
+  const o = v as { totals?: unknown; meter?: unknown; updatedAt?: unknown }
+  if (typeof o.totals !== 'object' || o.totals === null) return null
+  if (typeof o.meter !== 'object' || o.meter === null) return null
+  const t = o.totals as Partial<Totals>
+  if (typeof t.input !== 'number') return null
+  const m = o.meter as Partial<Meter>
+  return {
+    v: 1,
+    updatedAt: typeof o.updatedAt === 'number' ? o.updatedAt : 0,
+    totals: {
+      ...TOTALS0,
+      ...t,
+      byModel:
+        typeof t.byModel === 'object' && t.byModel !== null ? t.byModel : {},
+      lastModel: typeof t.lastModel === 'string' ? t.lastModel : null,
+    },
+    meter: {
+      ...METER0,
+      ...m,
+      tokens: typeof m.tokens === 'number' ? m.tokens : null,
+      window: typeof m.window === 'number' ? m.window : 0,
+      percent: typeof m.percent === 'number' ? m.percent : null,
+      usd: typeof m.usd === 'number' ? m.usd : null,
+      samples: [],
+    },
+  }
+}
+
 /** [input, output, cacheRead, cacheWrite], USD per 1M tokens */
 export type Rates = readonly [number, number, number, number]
 export type PriceTable = Record<string, Rates | undefined> & { default?: Rates }

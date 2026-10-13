@@ -21,9 +21,3 @@ export type Meter = {
   usd: number | null
   samples: [number, number][]
 }
-
-declare module 'claude-code' {
-  interface PluginState {
-    'task-meter': { totals: Totals; meter: Meter }
-  }
-}

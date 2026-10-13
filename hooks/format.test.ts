@@ -9,6 +9,7 @@ import {
   fmtModel,
   fmtTok,
   parsePricing,
+  parseSaved,
 } from './format'
 
 const T0 = {
@@ -87,6 +88,36 @@ test('customCost is null when nothing matches a rate', () => {
   const byModel = { x: { input: 1, output: 1, cacheRead: 1, cacheWrite: 1 } }
   expect(customCost(byModel, { 'claude-opus-4-7': [15, 75, 1.5, 18.75] })).toBe(null)
   expect(customCost({}, { default: [3, 15, 0.3, 3.75] })).toBe(null)
+})
+
+test('parseSaved reads back a blob and drops its rate samples', () => {
+  const blob = {
+    v: 1,
+    updatedAt: 123,
+    totals: { ...T0, input: 500, turns: 4, lastModel: 'claude-opus-4-7' },
+    meter: { tokens: 90_000, window: 200_000, percent: 45, usd: 0.4, samples: [[1, 2]] },
+  }
+  const s = parseSaved(blob)
+  expect(s?.totals.input).toBe(500)
+  expect(s?.totals.turns).toBe(4)
+  expect(s?.totals.lastModel).toBe('claude-opus-4-7')
+  expect(s?.meter.tokens).toBe(90_000)
+  expect(s?.meter.samples).toEqual([])
+})
+
+test('parseSaved rejects junk and fills defaults for older blobs', () => {
+  expect(parseSaved(undefined)).toBe(null)
+  expect(parseSaved('x')).toBe(null)
+  expect(parseSaved({ totals: 'no', meter: {} })).toBe(null)
+  // a 0.2-era blob: no byModel, no lastModel
+  const old = {
+    totals: { input: 5, output: 1, cacheRead: 2, cacheWrite: 3, turns: 1, turnMs: 9 },
+    meter: { tokens: 10, window: 200_000, percent: 5, usd: 0.01, samples: [] },
+  }
+  const s = parseSaved(old)
+  expect(s?.totals.byModel).toEqual({})
+  expect(s?.totals.lastModel).toBe(null)
+  expect(s?.totals.input).toBe(5)
 })
 
 test('composeLine assembles every segment', () => {

@@ -11,6 +11,12 @@ the window fills, and what the session has cost.
 No panes, no popups, no polling processes — one pinned line that stays out of
 the way. Segments whose figures aren't known yet are simply omitted.
 
+**Totals follow the conversation.** Close the CLI, come back with
+`claude --resume` tomorrow — turns, tokens, cache hit rate and per-model spend
+continue where they left off. (`/clear` starts a genuinely new conversation
+and its own counts.) The `≈… to full` ETA is the exception: it re-learns the
+fill rate from the new sitting's first responses.
+
 ## What each segment means
 
 | Segment | Meaning | Source |
@@ -71,5 +77,6 @@ tsc -p <folder>                   # types, once the engine has laid .claude-plug
 ```
 
 `hooks/format.ts` holds the pure display math (unit-tested); `hooks/register.ts`
-wires the events. Session totals live in `$.state`, so hot reloads don't zero
-them.
+wires the events. Totals persist per conversation in `$.store` (keyed by
+session id, blobs pruned after 30 idle days), so restarts, resumes and hot
+reloads never zero them.
