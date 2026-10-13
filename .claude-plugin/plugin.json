@@ -1,0 +1,21 @@
+{
+  "name": "task-meter",
+  "version": "0.2.0",
+  "description": "One status line: turn progress, token usage, context fill, cache hit rate, ETA to full and cost",
+  "author": { "name": "yuany" },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "pricing": {
+      "type": "string",
+      "title": "Custom pricing",
+      "description": "JSON rates in USD per 1M tokens: {\"default\":[input,output,cacheRead,cacheWrite],\"<model id>\":[...]}; empty uses the engine ledger",
+      "default": ""
+    },
+    "showCost": {
+      "type": "boolean",
+      "title": "Show cost",
+      "description": "Show the cost segment (fixed-price subscribers can turn it off)",
+      "default": true
+    }
+  }
+}

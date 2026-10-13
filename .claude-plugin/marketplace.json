@@ -1,0 +1,6 @@
+{
+  "name": "claude-task-meter",
+  "description": "One status line for Claude Code: turn progress, token usage, context fill, cache hit rate, ETA to full and cost",
+  "owner": { "name": "YUANYINGLONG-91" },
+  "plugins": [{ "name": "task-meter", "source": "./" }]
+}
