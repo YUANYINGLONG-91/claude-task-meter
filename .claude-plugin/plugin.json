@@ -2,7 +2,7 @@
   "name": "task-meter",
   "version": "0.4.0",
   "description": "One status line: turn progress, token usage, context fill, cache hit rate, ETA to full and cost — kept per conversation across restarts",
-  "author": { "name": "yuany" },
+  "author": { "name": "YUANYINGLONG-91" },
   "userConfig": {
     "pricing": {
       "type": "string",
